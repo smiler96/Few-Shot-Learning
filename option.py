@@ -13,7 +13,7 @@ parser.add_argument('--seed', type=int, default=666,
                     help='random seed')
 
 # Hardware specifications
-parser.add_argument('--n_threads', type=int, default=4,
+parser.add_argument('--n_threads', type=int, default=2,
                     help='number of threads for data loading')
 parser.add_argument('--use_gpu', action='store_false',
                     help='use GPU')
@@ -58,7 +58,7 @@ parser.add_argument('--gamma', type=float, default=0.5,
                     help='learning rate decay factor for step decay')
 
 parser.add_argument('--optimizer', default='Adam',
-                    choices=('SGD', 'ADAM', 'RMSprop'),
+                    choices=('SGD', 'Adam', 'RMSprop'),
                     help='optimizer to use (SGD | ADAM | RMSprop)')
 
 parser.add_argument('--momentum', type=float, default=0.9,
@@ -82,14 +82,17 @@ parser.add_argument('--eval_query', type=int, default=15,
                     help='the number of samples per class to evaluate the performance during testing')
 
 # Loss specifications
-parser.add_argument('--need_log', action='store_false',
-                    help='log is or not need')
-parser.add_argument('--log_interval', default=40,
-                    help='log acc / loss every log_interval batch')
+# RealtionNet
+parser.add_argument('--loss_type', default='mse',
+                    help='loss type for relation net')
 
 # Log specifications
 parser.add_argument('--save_root', type=str, default='saves',
                     help='the root of the save, including the tblogs/ weights/ loggers/ train_visulization')
+parser.add_argument('--need_log', action='store_false',
+                    help='log is or not need')
+parser.add_argument('--log_interval', default=40,
+                    help='log acc / loss every log_interval batch')
 
 args = parser.parse_args()
 args.save_root = os.path.abspath(args.save_root)

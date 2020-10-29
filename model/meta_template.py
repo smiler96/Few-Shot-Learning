@@ -22,15 +22,19 @@ class MetaTemplate(nn.Module):
         super(MetaTemplate, self).__init__()
 
         assert kwargs['encoder'] is not None
-
         self.encoder = self.get_encoder_module(name=kwargs['encoder'])
+
         self.n_way = kwargs['n_way']
         self.n_shot = kwargs['n_shot']
         self.n_query = kwargs['n_query']
         self.log = kwargs['need_log']
         self.log_interval = kwargs['log_interval']
 
-        self.writer = SummaryWriter(log_dir=kwargs['tblog'])
+        if ('tblog' in kwargs) and (kwargs['tblog'] is not None):
+            self.writer = SummaryWriter(log_dir=kwargs['tblog'])
+        else:
+            self.writer = None
+
         if kwargs['use_gpu'] and torch.cuda.is_available():
             self.device = torch.device('cuda')
             torch.backends.cudnn.deterministic = True
@@ -39,13 +43,12 @@ class MetaTemplate(nn.Module):
         else:
             self.device = torch.device('cpu')
 
-
         self.criterion = None
         self.optimizer = None
         if ('optimizer' in kwargs) and (kwargs['optimizer'] is not None):
             self.optimizer = self.get_optimizer(kwargs['optimizer'], **kwargs)
         self.lr_scheduler = None
-        if ('lr_scheduler' in kwargs) and (kwargs['lr_scheduler'] is not None):
+        if (self.optimizer is not None) and ('lr_scheduler' in kwargs) and (kwargs['lr_scheduler'] is not None):
             self.lr_scheduler = self.get_lr_scheduler(kwargs['lr_scheduler'], **kwargs)
 
     def forward(self, x):
@@ -82,7 +85,7 @@ class MetaTemplate(nn.Module):
         with torch.autograd.detect_anomaly():
             for i, batch in enumerate(train_loader):
                 X = batch[0]
-                X = X.to(self.device)
+                X = X.to(self.device, non_blocking=True)
 
                 loss, acc = self.set_forward_loss(X)
                 # gradient decent
@@ -107,12 +110,13 @@ class MetaTemplate(nn.Module):
         :param epoch: current epoch
         :return: accs
         '''
+        self.to(self.device)
         self.eval()
         with torch.no_grad():
             accs = []
             for i, batch in enumerate(eval_loader):
                 X = batch[0]
-                X = X.to(self.device)
+                X = X.to(self.device, non_blocking=True)
 
                 scores = self.set_forward(X)
                 labels = self.prepare_label()
@@ -123,7 +127,8 @@ class MetaTemplate(nn.Module):
                     logger.info(f'Epoch-{epoch}-Batch-{i + 1}/{len(eval_loader)}, {eval_name.lower()} acc: {acc:.4f}')
 
             avg_acc = np.mean(np.array(accs))
-            self.writer.add_scalar(f'{eval_name}/Accuracy', avg_acc, global_step=epoch)
+            if self.writer is not None:
+                self.writer.add_scalar(f'{eval_name}/Accuracy', avg_acc, global_step=epoch)
 
             if self.log:
                 logger.info(f'Epoch-{epoch}, {eval_name} acc: {avg_acc:.4f}')
@@ -146,8 +151,15 @@ class MetaTemplate(nn.Module):
         return acc
 
     def get_encoder_module(self, name='ConvNet'):
-        module = import_module('model.backbone.' + name.lower())
-        encoder = module.wrapper(in_c=3, h_dim=64, z_dim=64)
+        name = name.lower()
+        if name == 'convnet':
+            module = import_module('model.backbone.convnet')
+            encoder = module.wrapper(in_c=3, h_dim=64, z_dim=64)
+        elif 'resnet' in name:
+            module = import_module('model.backbone.resnet')
+            encoder = module.wrapper(n=int(name.split('resnet')[1]))
+        else:
+            raise NotImplementedError
         return encoder
 
     def get_optimizer(self, name, **kwargs):

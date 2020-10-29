@@ -19,3 +19,6 @@ def euclidean_metrix(X, centers):
     logits = -((X - centers) ** 2).sum(dim=2)
 
     return logits
+
+def ont_hot(labels, num_class):
+    return torch.zeros(len(labels), num_class).scatter_(1, labels.unsqueeze(1), 1)

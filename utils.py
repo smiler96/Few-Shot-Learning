@@ -29,6 +29,23 @@ def check_saves(args):
     logger.info(str(args))
     return args
 
+def check_test_args(args):
+    name = f'{args.model}_{args.encoder}_way-{args.n_way}_shot-{args.n_shot}_query-{args.n_query}-{args.dataset}'
+    args.ckpt = os.path.join(args.save_root, 'ckpt', name)
+
+    args.optimizer = None
+    args.tblog = None
+
+    # logger file
+    test_path = os.path.join(args.save_root, 'test')
+    check_path(test_path, False)
+    args.logger = os.path.join(test_path, f'{name}_episode-{args.batch}.txt')
+    if os.path.exists(args.logger):
+        os.remove(args.logger)
+    logger.add(args.logger, rotation="200 MB", backtrace=True, diagnose=True)
+    logger.info(str(args))
+
+    return args
 
 def check_optimizer(args, model):
     if args.optimizer == 'Adam':
