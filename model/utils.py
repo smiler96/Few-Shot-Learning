@@ -21,4 +21,4 @@ def euclidean_metrix(X, centers):
     return logits
 
 def ont_hot(labels, num_class):
-    return torch.zeros(len(labels), num_class).scatter_(1, labels.unsqueeze(1), 1)
+    return torch.zeros(len(labels), num_class, device=labels.device).scatter_(1, labels.unsqueeze(1), 1)

@@ -99,9 +99,9 @@ class MetaTemplate(nn.Module):
                 if self.log and ((i + 1) % self.log_interval == 0):
                     logger.info(
                         f'Epoch-{epoch}-Batch-{i + 1}/{len(train_loader)}, train loss: {loss.item():.4f}, acc: {acc:.4f}')
-
-            self.lr_scheduler.step(epoch=epoch)
-            self.writer.add_scalar('Train/LR', self.lr_scheduler.get_lr()[0], epoch)
+            if self.lr_scheduler is not None:
+                self.lr_scheduler.step(epoch=epoch)
+                self.writer.add_scalar('Train/LR', self.lr_scheduler.get_lr()[0], epoch)
 
     def eval_loop(self, eval_loader, epoch, eval_name='Test'):
         '''
@@ -178,6 +178,8 @@ class MetaTemplate(nn.Module):
 
     def get_lr_scheduler(self, name, **kwargs):
         assert self.optimizer is not None
+        if name is None:
+            return None
         decay_step = [int(s) for s in kwargs['decay_step'].split('-')]
         if name.lower() == 'step':
             lr_scheduler = torch.optim.lr_scheduler.StepLR(

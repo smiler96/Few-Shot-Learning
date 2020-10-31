@@ -72,9 +72,10 @@ class ResNet(nn.Module):
     def __init__(self, block=BaseBlock, layers=[2, 2, 2, 2]):
         super(ResNet, self).__init__()
         self.inplanes = 64
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(True)
+        self.pool1 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
@@ -103,6 +104,7 @@ class ResNet(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
+        x = self.pool1(x)
 
         x = self.layer1(x)
         x = self.layer2(x)
@@ -157,8 +159,8 @@ if __name__ == "__main__":
     import torch
     import torchsummary
 
-    model = resnet50()
-    x = np.random.uniform(0, 1, [1, 3, 224, 224]).astype(np.float32)
+    model = resnet10()
+    x = np.random.uniform(0, 1, [1, 3, 84, 84]).astype(np.float32)
     x = torch.tensor(x)
 
     y = model(x)

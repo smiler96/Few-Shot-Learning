@@ -26,11 +26,17 @@ parser.add_argument('--in_c', type=int, default=3,
 parser.add_argument('--data_root', type=str, default='D:/Dataset/miniImageNet/',
                     help='dataset root')
 
+parser.add_argument('--augment', action='store_true',
+                    help='use data augmentation, random horizontal flips and 90 rotations')
+
 # Model specifications
 parser.add_argument('--model', default='protonet',
                     help='model name')
 parser.add_argument('--encoder', default='convnet',
                     help="model's base encoder")
+# RealtionNet
+parser.add_argument('--fc_dim', type=int, default=1600,
+                    help="1600 for convnet encoder and 512 for resnet10-34 with image size=84")
 
 # Training specifications
 parser.add_argument('--n_way', type=int, default=5,
@@ -40,19 +46,17 @@ parser.add_argument('--n_shot', type=int, default=5,
 parser.add_argument('--n_query', type=int, default=15,
                     help='the number of samples per class to evaluate the performance during training')
 
-parser.add_argument('--augment', action='store_true',
-                    help='use data augmentation, random horizontal flips and 90 rotations')
 
 # Optimization specifications
-parser.add_argument('--epochs', type=int, default=200,
+parser.add_argument('--epochs', type=int, default=600,
                     help='number of epochs to train')
 parser.add_argument('--batch', type=int, default=100,
                     help='input batch size for training')
 parser.add_argument('--lr', type=float, default=1e-3,
                     help='learning rate')
-parser.add_argument('--lr_scheduler', type=str, default='Step',
+parser.add_argument('--lr_scheduler', type=str, default=None,
                     help='learning rate scheduler to use (Step | MultiStep | Cosine)')
-parser.add_argument('--decay_step', type=str, default='20',
+parser.add_argument('--decay_step', type=str, default='60',
                     help='learning rate decay type')
 parser.add_argument('--gamma', type=float, default=0.5,
                     help='learning rate decay factor for step decay')
@@ -68,7 +72,7 @@ parser.add_argument('--betas', type=tuple, default=(0.9, 0.999),
                     help='ADAM beta')
 parser.add_argument('--epsilon', type=float, default=1e-8,
                     help='ADAM epsilon for numerical stability')
-parser.add_argument('--weight_decay', type=float, default=0,
+parser.add_argument('--weight_decay', type=float, default=5e-4,
                     help='weight decay')
 parser.add_argument('--gclip', type=float, default=0,
                     help='gradient clipping threshold (0 = no clipping)')

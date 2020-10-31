@@ -38,24 +38,22 @@ class ConvNet(nn.Module):
 
 
 class RelationBlock(nn.Module):
-    def __init__(self, fea_dim=64 * 2, loss_type='mse'):
+    def __init__(self, fea_dim=64 * 2, fc_dim=1600, loss_type='mse'):
         super(RelationBlock, self).__init__()
 
         self.compress = nn.Sequential(
             ConvBlock(inc=fea_dim, outc=64, k=3, s=1, p=1, bn=True, act='relu', pooling='max'),
             ConvBlock(inc=64, outc=64, k=3, s=1, p=1, bn=True, act='relu', pooling='max'),
-            nn.AdaptiveAvgPool2d((1, 1)),
+            # nn.AdaptiveAvgPool2d((1, 1)),
         )
 
         self.fc = [
-            nn.Linear(64, 8),
+            nn.Linear(fc_dim, 8),
             nn.ReLU(True),
             nn.Linear(8, 1)
         ]
         if loss_type == 'mse':
             self.fc.append(nn.Sigmoid())
-        elif loss_type == 'crossentropy':
-            self.fc.append(nn.Softmax())
         self.fc = nn.Sequential(*self.fc)
 
     def forward(self, x):
@@ -73,7 +71,7 @@ class RelationNet(MetaTemplate):
             fea_dim = 512
         else:
             fea_dim = 64
-        self.metrixer = RelationBlock(fea_dim * 2, kwargs['loss_type'])
+        self.metrixer = RelationBlock(fea_dim * 2, kwargs['fc_dim'], kwargs['loss_type'])
 
         self.loss_type = kwargs['loss_type']
         if self.loss_type == 'mse':
@@ -139,7 +137,7 @@ if __name__ == "__main__":
     from option import args
 
     args.use_gpu = False
-    args.encoder = 'resnet10'
+    args.encoder = 'convnet'
     model = RelationNet(**vars(args))
     import numpy as np
 

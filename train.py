@@ -74,7 +74,7 @@ def train(args):
 
         ckpt = {
             'epoch': epoch,
-            'lr': model.lr_scheduler.get_lr()[0],
+            # 'lr': model.lr_scheduler.get_lr()[0],
             'best_acc': best_acc_val,
             'model_state_dict': model.state_dict(),
             'best_state_dict': best_state_dict,
